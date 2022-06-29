@@ -24,31 +24,107 @@
  */
 const argon2 = require("argon2");
 
-const securityParameters = {
-  timeCost: 5,
-  memoryCost: 8192,
-  parallelism: 2,
-  hashLength: 36,
-  type: argon2.argon2id,
-  saltLength: 36
+var securityParameters = {
+  timeCost: 5, // illitrations
+  memoryCost: 8192, // kibibytes 16MiB (as 1 per thread)
+  parallelism: 2, // threads
+  hashLength: 36, // length of hash
+  type: argon2.argon2id, // type of hash
+  saltLength: 36 // length of salt
 };
 
-// test
+var projectSalt = "";
+var functions = {};
 
-async function main(){
-    let password = "password";
-    console.log(password);
-    console.time("hash");
-    const hash = await argon2.hash(password, securityParameters);
-    console.timeEnd("hash");
-    console.log(hash);
-    console.time("verify");
-    const isValid = await argon2.verify(hash, password);
-    console.timeEnd("verify");
-    console.log(isValid);
-    password = "wrong password";
-    const isValid2 = await argon2.verify(hash, password);
-    console.log(isValid2);
-}
+const emailPassowordSalter = (email, password) => {
+  email = email.toLowerCase();
+  //check if email is a non null, non empty string
+  if (typeof email === "string" && email.length > 0) {
+    //validate email with regex
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!emailRegex.test(email)) {
+      throw new Error("email is not valid");
+    }
+    //check if password is a non null, non empty string
+    if (typeof password === "string" && password.length > 0) {
+      const splitMail = email.split("@");
+      const saltyMail = splitMail.join(`${projectSalt}@${projectSalt}`);
+      const saltyPassword = `${saltyMail}${projectSalt}${password}`;
+      const finalEmail =
+        splitMail[0].substring(0, Math.floor(splitMail[0].length / 2)) +
+        "*".repeat(Math.round(splitMail[0].length / 2)) +
+        "@" +
+        splitMail[1];
+      return {
+        email: finalEmail,
+        password: saltyPassword,
+        saltyMail
+      };
+    } else {
+      throw new Error("password is not valid");
+    }
+  } else {
+    throw new Error("email is not valid");
+  }
+};
 
-main();
+functions.lookup = async (email) => {
+  email = email.toLowerCase();
+  return await argon2.hash(
+    emailPassowordSalter(email, "").saltyMail,
+    securityParameters
+  );
+  /**
+   * @param {string} email - email to lookup
+   * @returns {Hash Of Email To Lookup}
+   */
+};
+
+functions.verify = async (email, password, passwordHash) => {
+  email = email.toLowerCase();
+  return await argon2.verify(
+    passwordHash,
+    emailPassowordSalter(email, password).password
+  );
+  /**
+   * @param {string} email - email to verify
+   * @param {string} password - password to verify
+   * @param {string} passwordHash - hash of password to verify
+   * @returns {boolean} - true if verified, false if not
+   * @throws {Error} - if email or password is not a string
+   */
+};
+
+functions.signup = async (email, password) => {
+  email = email.toLowerCase();
+  const salted = emailPassowordSalter(email, password);
+  const PasswordHash = await argon2.hash(salted.password, securityParameters);
+  const EmailHash = await argon2.hash(salted.saltyMail, securityParameters);
+  return {
+    email: salted.email,
+    passwordHash: PasswordHash,
+    emailHash: EmailHash
+  };
+  /**
+   * @param {string} email - email to signup
+   * @param {string} password - password to signup
+   * @returns {object} - object with email, passwordHash, and emailHash
+   */
+};
+
+module.exports.init = (params) => {
+  securityParameters.memoryCost =
+    params.memcost || securityParameters.memoryCost;
+  securityParameters.parallelism =
+    params.threadcost || securityParameters.parallelism;
+  //check if params.projectSalt is a non null, non empty string
+  if (
+    typeof params.projectSalt === "string" &&
+    params.projectSalt.length > 0
+  ) {
+    projectSalt = params.projectSalt;
+    return functions;
+  } else {
+    throw new Error("projectSalt is not a string or is empty");
+  }
+};
