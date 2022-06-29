@@ -1,0 +1,29 @@
+{
+  "name": "simple-and-secure-email-password",
+  "version": "1.0.0",
+  "description": "A simple and secure way to store emails and password with overkill security from Argon 2 hashing algorithim ( Depends on node-gyp ) !",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ashwin-droid/simple-and-secure-password-storage-storage.git"
+  },
+  "keywords": [
+    "password",
+    "hashing",
+    "security",
+    "email-password",
+    "ultra-secure"
+  ],
+  "author": "ashwin_droid",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ashwin-droid/simple-and-secure-password-storage-storage/issues"
+  },
+  "homepage": "https://github.com/Ashwin-droid/simple-and-secure-password-storage-storage#readme",
+  "dependencies": {
+    "argon2": "^0.28.5"
+  }
+}
