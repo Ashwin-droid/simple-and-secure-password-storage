@@ -38,9 +38,13 @@ const securityParameters = {
 async function main(){
     let password = "password";
     console.log(password);
+    console.time("hash");
     const hash = await argon2.hash(password, securityParameters);
+    console.timeEnd("hash");
     console.log(hash);
+    console.time("verify");
     const isValid = await argon2.verify(hash, password);
+    console.timeEnd("verify");
     console.log(isValid);
     password = "wrong password";
     const isValid2 = await argon2.verify(hash, password);
