@@ -1,9 +1,18 @@
 # Simple and secure email-password storage
 
+![GitHub top language](https://img.shields.io/github/languages/top/Ashwin-droid/simple-and-secure-password-storage)
+![Snyk Vulnerabilities for GitHub Repo](https://img.shields.io/snyk/vulnerabilities/github/Ashwin-droid/simple-and-secure-password-storage)
+![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/simple-and-secure-email-password)
+![npm bundle size](https://img.shields.io/bundlephobia/min/simple-and-secure-email-password)
+![GitHub repo size](https://img.shields.io/github/repo-size/Ashwin-droid/simple-and-secure-password-storage)
+![NPM](https://img.shields.io/npm/l/simple-and-secure-email-password)
+![npm](https://img.shields.io/npm/v/simple-and-secure-email-password)
+
 ### The go to solution for email-password storage
 * Keep your user's email and password in a secure and private.   
 * The email and password are both salted and hashed.   
-* It uses `argon2id` to hash the credentials.     
+* It uses `argon2id` to hash the credentials.  
+* Fully working demo project is available [here](https://github.com/Ashwin-droid/Test-code-for-simple-and-secure-email-password)   
      
 # Usage
 * ## Initialize
