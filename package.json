@@ -1,5 +1,5 @@
 {
-  "name": "simple-and-secure-email-password",
+  "name": "email-password",
   "version": "1.0.0",
   "description": "A simple and secure way to store emails and password with overkill security from Argon 2 hashing algorithim ( Depends on node-gyp ) !",
   "main": "index.js",
