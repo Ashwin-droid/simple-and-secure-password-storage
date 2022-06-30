@@ -28,6 +28,9 @@ const email = "example@example.com";
 const password = "Passw0rd123";
 const projectSalt = "TopSecretSaltForCompany";
 ```
+### Note:   
+Do store all the fields as-is in the database. Else it is guranteed to not work.   
+For unique identification use the `EmailHash` field.
 ```js
 {
     "email": "exa****@example.com"
@@ -36,4 +39,23 @@ const projectSalt = "TopSecretSaltForCompany";
 
     "EmailHash": "$argon2id$v=19$m=8192,t=5,p=2$pvpXhohD8hWPR/7f329yBes3s0JjFMM2yVFo34z6zd8aYe3Q$aVC0OwINXU7xi3J5bIO8jHZKXq3Q6f3nZ7ZjVRZrhM1qXzSs"
 }   
+```
+* ## Lookup a user in DB
+```js
+const mailFromUser = "example@example.com"
+const response = secureStore.getmail(mailfromUser); // exa****@example.com
+/**
+ * TODO: Lookup in the DB and return all possible matches. Also dont forget to check wether the user exists or not.
+*/
+const user = await secureStore.lookup(UserArrayFromDB, MailFromUser);
+// user will be returned as described above.
+```
+* ## Login a user
+```js
+const response = await secureStore.verify(email, password, user.passwordHash);
+if (response) {
+    // User is logged in successfully
+} else {
+    // Password error
+}
 ```

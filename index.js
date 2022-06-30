@@ -52,7 +52,7 @@ const emailPassowordSalter = (email, password) => {
       const saltyPassword = `${saltyMail}${projectSalt}${password}`;
       const finalEmail =
         splitMail[0].substring(0, Math.floor(splitMail[0].length / 2)) +
-        "*".repeat(Math.round(splitMail[0].length / 2)) +
+        "*".repeat(Math.ceil(splitMail[0].length / 2)) +
         "@" +
         splitMail[1];
       return {
@@ -68,17 +68,25 @@ const emailPassowordSalter = (email, password) => {
   }
 };
 
-functions.lookup = async (email) => {
+functions.getmail = (email) => {
   email = email.toLowerCase();
-  return await argon2.hash(
-    emailPassowordSalter(email, "").saltyMail,
-    securityParameters
-  );
+  return emailPassowordSalter(email, "00").email;
   /**
    * @param {string} email - email to lookup
-   * @returns {Hash Of Email To Lookup}
+   * @returns {Email To Lookup}
    */
 };
+
+functions.lookup = async (userArray, mailTolookup) => {
+  mailTolookup = mailTolookup.toLowerCase();
+  mailTolookup = emailPassowordSalter(mailTolookup, "00").saltyMail;
+  for (user of userArray){
+    var workaround = await argon2.verify(user.emailHash , mailTolookup );
+    if (workaround) {
+      return user;
+    }
+  }
+}
 
 functions.verify = async (email, password, passwordHash) => {
   email = email.toLowerCase();
