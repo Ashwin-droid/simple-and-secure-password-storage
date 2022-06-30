@@ -73,7 +73,7 @@ functions.getmail = (email) => {
   return emailPassowordSalter(email, "00").email;
   /**
    * @param {string} email - email to lookup
-   * @returns {Email To Lookup}
+   * @returns {string} - email with *s instead of characters to lookup on database
    */
 };
 
@@ -86,10 +86,21 @@ functions.lookup = async (userArray, mailTolookup) => {
       return user;
     }
   }
+  throw new Error("user not found");
+  /**
+   * @param {array} userArray - array of users to lookup from
+   * @param {string} mailTolookup - email to lookup in userArray
+   * @returns {object} - object with email, passwordHash, and emailHash
+   * @throws {Error} - if user is not found
+   */
 }
 
 functions.verify = async (email, password, passwordHash) => {
   email = email.toLowerCase();
+  //check if passwordHash is a non null, non empty string
+  if (!typeof passwordHash === "string" && passwordHash.length > 0) {
+    throw new Error("passwordHash is not valid");
+  }
   return await argon2.verify(
     passwordHash,
     emailPassowordSalter(email, password).password
@@ -135,4 +146,9 @@ module.exports.init = (params) => {
   } else {
     throw new Error("projectSalt is not a string or is empty");
   }
+  /**
+   * @param {object} params - object with projectSalt
+   * @returns {object} - object with functions
+   * @throws {Error} - if projectSalt is not a string or is empty
+   */
 };

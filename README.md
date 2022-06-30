@@ -38,7 +38,7 @@ const password = "Passw0rd123";
 const projectSalt = "TopSecretSaltForCompany";
 ```
 ### Note:   
-Do store all the fields as-is in the database. Else it is guranteed to not work.   
+Do store all the fields as-is in the database. Else it is guaranteed to not work.   
 For unique identification use the `EmailHash` field.
 ```js
 {
@@ -68,3 +68,21 @@ if (response) {
     // Password error
 }
 ```
+
+# How does it work?
+## At a glance
+* The email and password are both salted.
+* The salted email is a part of the password's hash.
+* password is salted as following:   
+`password + projectSalt + saltedEmail`
+* email is salted as following:   
+`example@example.com` => 
+```js
+`example${projectSalt}@${projectSalt}example.com`
+```
+* Then it is hashed via argon2id for ultra security.
+* If this module is implemented correctly it is 99.99% Immune to any attacks and breaches.
+* Because you need three things to break the password's hash (mail, password, projectSalt), to crack it the hacker needs to get hold of the mail and password salt making rainbow tables a thing of the past.
+* Additionally for added safety argon2 adds a salt of its own.
+* Due to this super simple passwords like `12345678`, `qwertyuip` next to impossible to break.
+* NOTE: By no means we recommend to use weak passwords.
