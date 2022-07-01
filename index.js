@@ -23,10 +23,11 @@
  *
  */
 const argon2 = require("argon2");
+const { SHA3 } = require("sha3");
 
 var securityParameters = {
   timeCost: 5, // illitrations
-  memoryCost: 8192, // kibibytes 16MiB (as 1 per thread)
+  memoryCost: 8192, // kilobytes 16MiB (as 1 per thread)
   parallelism: 2, // threads
   hashLength: 36, // length of hash
   type: argon2.argon2id, // type of hash
@@ -35,13 +36,16 @@ var securityParameters = {
 
 var projectSalt = "";
 var functions = {};
+var hash;
+var lsm = false;
 
-const emailPassowordSalter = (email, password) => {
+const emailPasswordSalter = (email, password) => {
   email = email.toLowerCase();
   //check if email is a non null, non empty string
   if (typeof email === "string" && email.length > 0) {
     //validate email with regex
-    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const emailRegex =
+      /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (!emailRegex.test(email)) {
       throw new Error("email is not valid");
     }
@@ -68,20 +72,51 @@ const emailPassowordSalter = (email, password) => {
   }
 };
 
-functions.getmail = (email) => {
+functions.getMailHash = (email) => {
   email = email.toLowerCase();
-  return emailPassowordSalter(email, "00").email;
+  if (!lsm) {
+    throw new Error(
+      "You cannot use less secure method while high security is enabled"
+    );
+  }
+  //check if email is a non null, non empty string
+  if (typeof email === "string" && email.length > 0) {
+    const saltedMail = emailPasswordSalter(email, "00").saltyMail;
+    return hash.reset().update(saltedMail).digest("hex");
+  }
   /**
-   * @param {string} email - email to lookup
-   * @returns {string} - email with *s instead of characters to lookup on database
+   * @param {string} email - email to get hash of
+   * @returns {string} - hash of email
+   * @throws {Error} - if email is not valid
+   * @throws {Error} - if less security is disabled
    */
 };
 
-functions.lookup = async (userArray, mailTolookup) => {
-  mailTolookup = mailTolookup.toLowerCase();
-  mailTolookup = emailPassowordSalter(mailTolookup, "00").saltyMail;
-  for (user of userArray){
-    var workaround = await argon2.verify(user.emailHash , mailTolookup );
+functions.getMail = (email) => {
+  if (lsm) {
+    throw new Error(
+      "You cannot use high security method while less security is enabled"
+    );
+  }
+  email = email.toLowerCase();
+  return emailPasswordSalter(email, "00").email;
+  /**
+   * @param {string} email - email to lookup
+   * @returns {string} - email with *s instead of characters to lookup on database
+   * @throws {Error} - if less security is enabled
+   */
+};
+
+functions.lookup = async (userArray, mailToLookup) => {
+  if (lsm) {
+    throw new Error(
+      "You cannot use high security method while less security is enabled"
+    );
+  }
+  mailToLookup = mailToLookup.toLowerCase();
+  mailToLookup = emailPasswordSalter(mailToLookup, "00").saltyMail;
+  for (user of userArray) {
+    var workaround = await argon2.verify(user.emailHash, mailToLookup);
     if (workaround) {
       return user;
     }
@@ -89,11 +124,12 @@ functions.lookup = async (userArray, mailTolookup) => {
   throw new Error("user not found");
   /**
    * @param {array} userArray - array of users to lookup from
-   * @param {string} mailTolookup - email to lookup in userArray
+   * @param {string} mailToLookup - email to lookup in userArray
    * @returns {object} - object with email, passwordHash, and emailHash
    * @throws {Error} - if user is not found
+   * @throws {Error} - if less security is enabled
    */
-}
+};
 
 functions.verify = async (email, password, passwordHash) => {
   email = email.toLowerCase();
@@ -103,7 +139,7 @@ functions.verify = async (email, password, passwordHash) => {
   }
   return await argon2.verify(
     passwordHash,
-    emailPassowordSalter(email, password).password
+    emailPasswordSalter(email, password).password
   );
   /**
    * @param {string} email - email to verify
@@ -116,9 +152,11 @@ functions.verify = async (email, password, passwordHash) => {
 
 functions.signup = async (email, password) => {
   email = email.toLowerCase();
-  const salted = emailPassowordSalter(email, password);
+  const salted = emailPasswordSalter(email, password);
   const PasswordHash = await argon2.hash(salted.password, securityParameters);
-  const EmailHash = await argon2.hash(salted.saltyMail, securityParameters);
+  const EmailHash = lsm
+    ? hash.reset().update(salted.saltyMail).digest("hex")
+    : await argon2.hash(salted.saltyMail, securityParameters);
   return {
     email: salted.email,
     passwordHash: PasswordHash,
@@ -128,19 +166,22 @@ functions.signup = async (email, password) => {
    * @param {string} email - email to signup
    * @param {string} password - password to signup
    * @returns {object} - object with email, passwordHash, and emailHash
+   * @throws {Error} - if email or password is invalid
    */
 };
 
 module.exports.init = (params) => {
   securityParameters.memoryCost =
-    params.memcost || securityParameters.memoryCost;
+    params.memCost || securityParameters.memoryCost;
   securityParameters.parallelism =
-    params.threadcost || securityParameters.parallelism;
+    params.threadCost || securityParameters.parallelism;
   //check if params.projectSalt is a non null, non empty string
-  if (
-    typeof params.projectSalt === "string" &&
-    params.projectSalt.length > 0
-  ) {
+  if (params.lessSecureMode) {
+    lsm = true;
+    hash = new SHA3(512);
+  }
+
+  if (typeof params.projectSalt === "string" && params.projectSalt.length > 0) {
     projectSalt = params.projectSalt;
     return functions;
   } else {

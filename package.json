@@ -1,8 +1,9 @@
 {
   "name": "email-password",
-  "version": "1.0.2",
+  "version": "1.1.2",
   "description": "A simple and secure way to store emails and password with overkill security from Argon 2 hashing algorithm ( Depends on node-gyp ) !",
   "main": "index.js",
+  "type":"module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -24,7 +25,8 @@
   },
   "homepage": "https://github.com/Ashwin-droid/simple-and-secure-password-storage-storage#readme",
   "dependencies": {
-    "argon2": "^0.28.5"
+    "argon2": "^0.28.5",
+    "sha3": "^2.1.4"
   },
   "devDependencies": {
     "@types/node": "^18.0.0"
