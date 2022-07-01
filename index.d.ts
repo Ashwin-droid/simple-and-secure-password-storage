@@ -9,5 +9,9 @@ declare namespace functions {
         emailHash: string;
     }>;
 }
+export default init;
+declare module "index" {
+    export = init;
+}
 export {};
 //# sourceMappingURL=index.d.ts.map

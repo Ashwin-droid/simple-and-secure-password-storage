@@ -1,7 +1,7 @@
 {
   "name": "email-password",
-  "version": "1.0.1",
-  "description": "A simple and secure way to store emails and password with overkill security from Argon 2 hashing algorithim ( Depends on node-gyp ) !",
+  "version": "1.0.2",
+  "description": "A simple and secure way to store emails and password with overkill security from Argon 2 hashing algorithm ( Depends on node-gyp ) !",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
